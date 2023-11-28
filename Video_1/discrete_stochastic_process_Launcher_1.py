@@ -5,59 +5,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class PointsFromDistribution14_1(ThreeDScene):
+class StochasticProcesses1(Scene):
 
     def construct(self):
-        self.set_camera_orientation(phi=55 * DEGREES, theta=65 * DEGREES)
-        ax = ThreeDAxes(
-            x_range=[2, 8, 1],
-            y_range=[2, 8, 1],
-            z_range=[0, 1, 0.1],
-            z_axis_config={"color": None}
-        ).scale(0.5)
-        # self.add(ax)
-        # self.begin_ambient_camera_rotation(rate=15*DEGREES)
-        # self.play(Write(ax), run_time=1)
-        # self.wait(3)
-        mu = np.ones(2) * 5
-        cov = np.array([[1, 0.8], [0.8, 1]])
-        distribution = Surface(
-            lambda u, v: ax.c2p(u, v, get_multivaraite_normal_pdf(np.array([u, v]), mu, cov) * 2),
-            resolution=(48, 48),
-            u_range=[2, 8],
-            v_range=[2, 8],
-            fill_opacity=0.9
-        )
-        # group.scale(0.3)
-        # # group.rotate(PI/2, axis=RIGHT)
-        # self.play(Create(group))
+        xy_axis = self.get_xy_axis()
+        self.add(xy_axis)
 
-        mu = np.ones(2) * 5
-        cov = np.array([[1, -0.8], [-0.8, 1]])
-        distribution2 = Surface(
-            lambda u, v: ax.c2p(u, v, get_multivaraite_normal_pdf(np.array([u, v]), mu, cov) * 2),
-            resolution=(48, 48),
-            u_range=[2, 8],
-            v_range=[2, 8],
-            fill_opacity=0.9
-        )
-        # group2 = VGroup(ax, distribution2)
-        self.add(ax, distribution)
+        samples = []
+        x_values = np.arange(1,20)
+        cov = [[self.rbf_kernel(x1=i, x2=j) for i in x_values] for j in x_values]
 
-        self.play( Transform(distribution, distribution2), run_time=1)
-        self.wait()
-        # self.add(ax, group)
-        # self.add(ax, group2)
-        # self.wait()
+        for i in range(10):
+            sample = get_multivaraite_normal_samples(mu=np.ones(len(cov))*5, cov=cov, n_samples=1)
+            samples.append(sample)
+            points_group = VGroup()
+            for idx, x in enumerate(x_values[:2]):
+                rand_point = Dot(xy_axis.coords_to_point(x, sample[idx]), color=RED)
+                points_group.add(rand_point)
+            self.play(Write(points_group))
 
-    def create_contour_curves(self, axis):
+
+    def rbf_kernel(self, x1, x2, gamma=10):
+        squared_distance = np.sum((x1 - x2) ** 2)
+        kernel_value = 0.2 * np.exp(-gamma * squared_distance)
+        return kernel_value
+
+    def create_contour_curves(self, axis, cov):
         x = np.linspace(0, 10, 500)
         y = np.linspace(0, 10, 500)
         X, Y = np.meshgrid(x, y)
 
         from scipy.stats import multivariate_normal
         import matplotlib.pyplot as plt
-        rv = multivariate_normal([5, 5], [[1, 0], [0, 1]])
+        rv = multivariate_normal([5, 5], cov)
         data = np.dstack((X, Y))
         z = rv.pdf(data)
         obj_contour = plt.contour(x, y, z, np.array(
@@ -74,9 +54,7 @@ class PointsFromDistribution14_1(ThreeDScene):
 
                 g.add(ellipse_curve)
 
-        self.play(Write(g))
-
-        return 0
+        return g
 
     def generate_samples_object(self, n_samples, group, x_axis, seed=0):
         sample = get_normal_samples(n_samples=n_samples, mu=5, variance=1, seed=seed)
@@ -113,14 +91,20 @@ class PointsFromDistribution14_1(ThreeDScene):
 
     def get_xy_axis(self):
 
+        xy_axis = Axes(x_range=(0, 3), y_range=(0, 10), color=BLUE)
+        # xy_axis.shift(DOWN * 2)
+
+        return xy_axis
+
+    def get_new_xy_axis(self):
+
         xy_axis = Axes(x_range=(0, 10), y_range=(0, 10), color=BLUE)
         # xy_axis.shift(DOWN * 2)
 
         return xy_axis
 
-
 if __name__ == '__main__':
-    scene = PointsFromDistribution14_1()
+    scene = StochasticProcesses1()
     scene.render()  # That's it!
 
     open_media_file(scene.renderer.file_writer.movie_file_path)

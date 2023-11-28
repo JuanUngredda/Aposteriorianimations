@@ -1,3 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/home/juan/Documents/Github_repos/AposterioiAnimations/Video_1/media/videos/1080p60/partial_movie_files/PointsFromDistribution14/1201882166_3589261706_223132457.mp4'
-file 'file:/home/juan/Documents/Github_repos/AposterioiAnimations/Video_1/media/videos/1080p60/partial_movie_files/PointsFromDistribution14/4288618305_957343386_3084269400.mp4'
